@@ -1,0 +1,12 @@
+---
+SITE_NAME: dokuwiki
+#DOKUWIKI_VER: 2016-06-26a
+#DOKUWIKI_VER: 2016-06-26b
+#DOKUWIKI_VER: 2017-02-19
+#DOKUWIKI_VER: 2017-02-19a
+#DOKUWIKI_VER: 2017-02-19b
+#DOKUWIKI_VER: 2017-02-19c
+DOKUWIKI_VER: 2017-02-19e
+DOKUWIKI_SOURCE: https://github.com/splitbrain/dokuwiki/archive/
+# образец пути:
+# https://github.com/splitbrain/dokuwiki/archive/release_stable_2017-02-19b.tar.gz

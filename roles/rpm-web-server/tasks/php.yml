@@ -1,0 +1,28 @@
+---
+- name: Подключаем репозиторий webtatic
+  package:
+    name: https://mirror.webtatic.com/yum/el7/webtatic-release.rpm
+    state: present
+
+- name: Устанавливаем модули php
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - php
+  - php-mysqlnd
+  - php-gd
+  - php-curl
+  - php-ldap
+  - php-imap
+  - php-zlib
+  - php-mbstring
+  - php-json
+  - php-fileinfo
+  - php-ctype
+
+- name: Настраиваем php.ini
+  lineinfile:
+    dest: /etc/php.ini
+    regexp: '^short_open_tag = Off'
+    line: 'short_open_tag = On'

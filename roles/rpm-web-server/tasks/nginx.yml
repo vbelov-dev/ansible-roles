@@ -1,0 +1,46 @@
+---
+- name: Устанавливаем nginx
+  package:
+    name: nginx
+    state: present
+  notify:
+    - nginx start
+
+- name: Устанавливаем права на корневую папку
+  file:
+    path: /srv
+    state: directory
+    mode: 0771
+
+- name: Создаем папку для сайтов, настраиваем права.
+  file:
+    path: /srv/web
+    state: directory
+    owner: root
+    group: nginx
+    mode: 02777  # Доступ всем из-за проблем с LDAP группами и nginx
+                # Необходимо обеспечить возможность создания сайтов любыми
+                # пользователями (владелец пользователь, группа общая), при
+                # этом должен сохраняться доступ к каталогам для nginx
+                # (группа nginx), при этом нельзя назначить LDAP группу
+                # локальному пользователю ngnix.
+
+- name: Копируем конфиг файл для nginx
+  template: src={{item.src}}
+        dest={{item.dest}}
+        owner=root
+        group=root
+        mode=0644
+  with_items:
+    - { src: 'nginx.conf', dest: '/etc/nginx/nginx.conf' }
+    - { src: 'sites.conf', dest: '/etc/nginx/conf.d/sites.conf' }
+    - { src: 'default.conf', dest: '/etc/nginx/conf.d/default.conf' }
+  notify:
+    - nginx restart
+
+- name: Добавляем пользователя nginx в группу apache (для доступа к каталогу сессий php)
+  user:
+    name: nginx
+    groups: apache
+    append: yes
+  ignore_errors: yes

@@ -1,0 +1,10 @@
+---
+- name: Открываем порт mysql (3306)
+  firewalld:
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+  with_items:
+  - mysql
+  notify:
+  - firewalld reload

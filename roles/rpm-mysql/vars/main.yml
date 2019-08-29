@@ -1,0 +1,3 @@
+---
+# лог-файл
+default_mysql_error_log: /var/log/mysqld.log

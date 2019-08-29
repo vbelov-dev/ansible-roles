@@ -1,0 +1,6 @@
+---
+# Перезагрузка mysql
+- name: mysql restart
+  service:
+    name: mysqld
+    state: restarted

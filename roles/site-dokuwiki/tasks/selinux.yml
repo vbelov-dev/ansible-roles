@@ -1,0 +1,22 @@
+---
+- name: SELinux - настраиваем контекст для папок
+  sefcontext:
+    target={{ item.path }}
+    setype={{ item.type }}
+    state=present
+  with_items:
+  - { path: '{{ WEB_PATH }}/{{ SITE_NAME }}/data(/.*)?', type: 'httpd_sys_rw_content_t' }
+  - { path: '{{ WEB_PATH }}/{{ SITE_NAME }}/lib/plugins(/.*)?', type: 'httpd_sys_rw_content_t' }
+
+- name: SELinux - обновляем контексты для папок
+  command: "restorecon -R {{ WEB_PATH }}/{{ SITE_NAME }}"
+
+# - name: SELinux - разрешаем веб-серверу внешние подключения
+#   seboolean:
+#     name={{ item }}
+#     state=yes
+#     persistent=yes
+#   with_items:
+#   - httpd_can_network_connect
+#   - httpd_can_network_connect_db
+#   - httpd_can_sendmail

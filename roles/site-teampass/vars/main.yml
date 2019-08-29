@@ -1,0 +1,8 @@
+---
+SITE_NAME: teampass
+#SITE_VER: 2.1.27.3
+#SITE_VER: 2.1.27.3
+SITE_VER: 2.1.27.3
+SITE_SOURCE: https://github.com/nilsteampassnet/TeamPass/archive/
+# образец пути:
+# https://github.com/nilsteampassnet/TeamPass/archive/2.1.27.3.tar.gz

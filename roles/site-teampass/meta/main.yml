@@ -1,0 +1,6 @@
+---
+dependencies:
+#  - { role: rpm-web-server }
+  - { role: rpm-mysql }
+#  - { role: rpm-selinux }
+#  - { role: rpm-firewalld }

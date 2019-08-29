@@ -1,0 +1,12 @@
+---
+- name: Устанавливаем nginx
+  import_tasks: nginx.yml
+
+- name: Устанавливаем php-fpm
+  import_tasks: php-fpm.yml
+
+- name: Настраиваем SELinux
+  import_tasks: selinux.yml
+
+- name: Настраиваем Firewall
+  import_tasks: firewall.yml

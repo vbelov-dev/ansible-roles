@@ -1,0 +1,38 @@
+---
+  - name: Создаем базу данных "{{ DB_NAME }}"
+    mysql_db:
+      name: "{{ DB_NAME }}"
+      state: present
+    register: db_create
+
+  - name: Копируем схему на сервер БД
+    copy:
+      src: "{{ DB_NAME }}.sql"
+      dest: "/tmp/{{ DB_NAME }}.sql"
+    when:
+      - db_create.changed == true
+
+  - name: Импортируем схему БД
+    mysql_db:
+      name: "{{ DB_NAME }}"
+      state: import
+      target: "/tmp/{{ DB_NAME }}.sql"
+    when:
+      - db_create.changed == true
+
+  - name: Создаем пользователя "{{ DB_USER }}", назначаем права
+    mysql_user:
+      name: "{{ DB_USER }}"
+      host: "%"
+      password: "{{ DB_PASSWORD }}"
+      state: present
+      append_privs: true
+      priv: "{{ DB_NAME }}.*:ALL"
+
+  # - name: Назначаем права пользователю "{{ DB_USER }}"
+  #   mysql_user:
+  #     name: "{{ DB_USER }}"
+  #     host: "%"
+  #     append_privs: true
+  #     priv: "{{ DB_NAME }}.*:ALL"
+  #     state: present

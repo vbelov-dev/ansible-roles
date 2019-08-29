@@ -1,0 +1,97 @@
+---
+# Не работает с Fedora "из коробки" надо править $releasever на версию для RHEL/Centos (7)
+
+- name: Подключаем репозиторий Percona
+  package:
+    name: http://www.percona.com/downloads/percona-release/redhat/0.1-4/percona-release-0.1-4.noarch.rpm
+    state: present
+
+# Для переустановки с нуля надо:
+# - удалить файлы в папке /var/lib/mysql (саму папку лучше не трогать из-за SELinux)
+# - удалить файл /root/.my.cnf (тогда в него будет записан новый временный пароль)
+# - опционально удалить конфиг-файлы в /etc/percona-server.conf.d/
+
+- name: Устанавливаем Percona MySQL Server
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - Percona-Server-server-57
+    - percona-xtrabackup
+    - percona-toolkit
+#    - percona-zabbix-templates  # кривая фигня конвертированная с nagios для Zabbix 2
+    - MySQL-python              # Необходим для работы ansible с mysql
+  notify:
+    - mysql restart
+# TODO - понизить сложность пароля в политиках (без спецсимволов)
+
+- name: Копируем конфиг MySQL
+  template:
+    src: mysqld.cnf
+    dest: /etc/percona-server.conf.d/mysqld.cnf
+  notify:
+    - mysql restart
+
+- name: Настраиваем Firewall
+  import_tasks: firewall.yml
+
+- name: Проверяем что MySQL запущен
+  service:
+    name: mysqld
+    state: started
+    enabled: yes
+
+# Перед дальнейшими операциями необходимо перезагрузить mysql, если были изменения
+- meta: flush_handlers
+
+# Это костыль для смены пароля root'a при инициализации mysql 5.7,
+# пока ansible не научится это делать через стандартный модуль
+- name: Ищем временный пароль в логах
+  shell: awk '/temporary password/{ pass[i++] = $NF} END {print pass[i-1]}' {{ default_mysql_error_log }}
+  register: mysql_tmp_pwd
+  changed_when: false
+
+- debug:
+    msg: "{{ mysql_tmp_pwd.stdout }}"
+    verbosity: 2
+
+# Конфиг-файл копируется только если его не существует!
+# (при этом условии считаем что установка происходит с нуля)
+# При копировании в него устанавливается временный пароль
+# найденный в лог-файле mysqld.log
+# Для обычной смены пароля достаточно установить новый пароль в
+# переменную хоста: mysql_root_password
+- name: Создаем конфиг-файл root'a
+  template:
+    src: my.cnf
+    dest: /root/.my.cnf
+    owner: root
+    group: root
+    mode: 0600
+    force: no                       # Если файл существует не копируем
+  register: mysql_new_installation
+
+- debug:
+    msg: "{{ mysql_new_installation.changed }}"
+    verbosity: 2
+
+- name: Меняем пароль root'a после инициализации
+  shell: >
+    mysql -u root -NBe
+    "SET PASSWORD = '{{ mysql_root_password }}';" --connect-expired-password
+  when:
+    - mysql_new_installation.changed == true
+
+- name: Меняем пароль root'a
+  mysql_user:
+    host_all: yes
+    name: root
+    password: "{{ mysql_root_password }}"
+  when:
+    - mysql_new_installation.changed == false
+
+- name: Обновляем пароль в конфиг-файле root'a
+  lineinfile:
+    path: /root/.my.cnf
+    regexp: password=
+    line: password='{{ mysql_root_password }}'

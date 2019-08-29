@@ -1,0 +1,20 @@
+---
+- name: Устанавливаем php-fpm
+  package: name=php-fpm
+       state=present
+  notify:
+    - php-fpm start
+
+- name: Устанавливаем php
+  import_tasks: php.yml
+
+- name: Копируем конфиг файл для php-fpm
+  template: src={{item.src}}
+        dest={{item.dest}}
+        owner=root
+        group=root
+        mode=0644
+  with_items:
+    - { src: 'www.conf', dest: '/etc/php-fpm.d/www.conf' }
+  notify:
+    - php-fpm restart

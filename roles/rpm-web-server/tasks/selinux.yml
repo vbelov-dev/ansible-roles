@@ -1,0 +1,19 @@
+- name: SELinux - настраиваем контекст для папок
+  sefcontext:
+    target={{ item.path }}
+    setype={{ item.type }}
+    state=present
+  with_items:
+  - { path: '/srv/web(/.*)?', type: 'httpd_sys_content_t' }
+
+# - name: SELinux: разрешаем веб-серверу внешние подключения (httpd_can_network_connect)
+#   seboolean:
+#     name=httpd_can_network_connect
+#     state=yes
+#     persistent=yes
+
+# - name: SELinux: разрешаем веб-серверу внешние подключения к БД (httpd_can_network_connect_db)
+#   seboolean:
+#     name=httpd_can_network_connect_db
+#     state=yes
+#     persistent=yes

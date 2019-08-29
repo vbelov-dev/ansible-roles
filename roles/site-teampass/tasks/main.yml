@@ -1,0 +1,106 @@
+---
+
+# TODO:
+#  - защита от даунгрейда
+
+# - name: Устанавливаем необходимые пакеты
+#   package:
+#     name: git
+#     state: present
+#
+# - include: nginx.yml
+#
+# - name: Проверяем наличие установленной версии
+#   stat:
+#       path: "{{ WEB_PATH }}/{{ SITE_NAME }}"
+#   register: doku_dir
+#
+# - name: Проверяем текущую версию
+#   command: awk '{ print $1 }' {{ WEB_PATH }}/{{ SITE_NAME }}/VERSION
+#   register: doku_ver
+#   ignore_errors: yes
+#
+# - name: Завершаем работу если текущая версия уже установлена.
+#   fail:
+#         msg: Уже установлена DokuWiki {{ DOKUWIKI_VER }}
+#   when: DOKUWIKI_VER in doku_ver
+# #  when: "{{ doku_ver.stdout }} == {{ DOKUWIKI_VER }}"
+#
+# - name: Перемещаем старую версию
+#   command: mv {{ WEB_PATH }}/{{ SITE_NAME }} {{ WEB_PATH }}/{{ SITE_NAME }}_old
+#   when: doku_dir.stat.exists
+#
+# - name: Скачиваем и распаковываем DokuWiki
+#   unarchive:
+#         src: "{{ DOKUWIKI_SOURCE }}/release_stable_{{ DOKUWIKI_VER }}.tar.gz"
+#         dest: "{{ WEB_PATH }}"
+#         remote_src: True
+#         owner: "{{ WEB_USER }}"
+#         group: "{{ WEB_GROUP }}"
+#
+# - name: Переименовываем папку
+#   command: mv {{ WEB_PATH }}/{{ SITE_NAME }}-release_stable_{{ DOKUWIKI_VER }} {{ WEB_PATH }}/{{ SITE_NAME }}
+#
+# - name: Копируем конфигурационные файлы
+#   copy:
+#     src: "{{ item }}"
+#     dest: "{{ WEB_PATH }}/{{ SITE_NAME }}/conf/{{ item }}"
+#     owner: "{{ WEB_USER }}"
+#     group: "{{ WEB_GROUP }}"
+#     mode: 0660
+#   with_items:
+#     - acl.auth.php
+#     - dokuwiki.php
+#     - local.php
+#     - plugins.local.php
+#     - users.auth.php
+#     - userstyle.css
+#
+# - name: Копируем данные из старой версии DokuWiki
+#   command: cp -R {{ WEB_PATH }}/{{ SITE_NAME }}_old/data {{ WEB_PATH }}/{{ SITE_NAME }}
+#   when: doku_dir.stat.exists
+#
+# - name: Удаляем старую версию вики DokuWiki
+#   file:
+#       path: "{{ WEB_PATH }}/{{ SITE_NAME }}_old"
+#       state: absent
+#   when: doku_dir.stat.exists
+#
+# - name: Удаляем лишние языковые настройки
+#   command: php {{ WEB_PATH }}/{{ SITE_NAME }}/bin/striplangs.php -k en,ru
+#
+# - name: Удаляем плагины
+#   file:
+#     path: "{{ WEB_PATH }}/{{ SITE_NAME }}/lib/plugins/{{ item }}"
+#     state: absent
+#   with_items:
+#     - authpdo
+#     - authpgsql
+#     - authmysql
+#     - authad
+#     - info
+#     - popularity
+#
+# - name: Устанавливаем плагины
+#   command: php {{ WEB_PATH }}/{{ SITE_NAME }}/bin/gittool.php install {{ item }}
+#   with_items:
+#     - indexmenu
+#
+# - name: Удаляем ненужные файлы
+#   command: find {{ WEB_PATH }}/{{ SITE_NAME }}/ -name {{ item }} -exec rm -rf {} \;
+#   with_items:
+#     - ".htaccess*"
+#     - ".git"
+#     - "install.php"
+#   ignore_errors: yes
+#
+# - name: Устанавливаем права на файлы и папки
+#   command: chown -R nginx:nginx {{ WEB_PATH }}/{{ SITE_NAME }}
+#
+# - name: Исправляем права на папки (770)
+#   command: find {{ WEB_PATH }}/{{ SITE_NAME }}/ -type d -exec chmod 770 {} \;
+#
+# - name: Исправляем права на файлы (660)
+#   command: find {{ WEB_PATH }}/{{ SITE_NAME }}/ -type f -exec chmod 660 {} \;
+#
+# - include: selinux.yml
